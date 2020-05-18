@@ -1,5 +1,7 @@
 import sys
 
+flag_div = 0
+
 registers = {"r0":"",
 "r1":"",
 "r2":"",
@@ -39,6 +41,32 @@ def get_a_free_register(inside):
 temp_res = {}
 data = []
 
+
+def get_reg(arg):
+    if(arg[0] == "T"):
+        variable = temp_res[arg]
+    elif(arg.isdigit()):
+        if(arg not in registers.values()):
+            reg = get_a_free_register(arg)
+            output_list.append(["mov "+reg+","+str(hex(int(arg)))])
+            variable = reg
+        else:
+            variable = get_key(arg)
+    else:
+        if(arg not in data):
+            data.append(arg)
+        if(arg not in registers.values()):
+            reg = get_a_free_register(arg)
+            output_list.append("ldr "+reg+","+"="+arg)
+            output_list.append("ldr "+reg+","+"["+reg+"]")
+            variable = reg
+        else:
+            reg = get_key(arg)
+            output_list.append("ldr "+reg+","+"["+reg+"]")
+            variable = reg
+    return variable
+
+
 filename = sys.argv[1]
 f = open(filename,"r")
 fileContent = f.read()
@@ -48,22 +76,8 @@ for row in rows:
     # list_quad = 0 operand 1 arg1 2 arg2 3 result
     #print(list_quad)
     if(list_quad[0] == "="):
-        if(list_quad[1][0] == "T"):
-            variable = temp_res[list_quad[1]]
-        elif(list_quad[1].isdigit()):
-            if(list_quad[1] not in registers.values()):
-                reg = get_a_free_register(list_quad[1])
-                output_list.append(["mov "+reg+","+str(hex(int(list_quad[1])))])
-                variable = reg
-            else:
-                variable = get_key(list_quad[1])
-        else:
-            if(list_quad[1] not in data):
-                data.append(list_quad[1])
-            reg = get_a_free_register(list_quad[1])
-            output_list.append("ldr "+reg+","+"="+list_quad[1])
-            output_list.append("ldr "+reg+","+"["+reg+"]")
-            variable = reg
+        variable = get_reg(list_quad[1])
+
         if(list_quad[3] not in data):
             data.append(list_quad[3])
         if(list_quad[3] not in registers.values()):
@@ -74,5 +88,22 @@ for row in rows:
             reg = get_key(list_quad[3])
             output_list.append("ldr "+variable+","+"["+reg+"]")
 
+    if(list_quad[0] == "+" or list_quad[0] == "-" or list_quad[0] == "*"):
+        variable1 = get_reg(list_quad[1])
+        variable2 = get_reg(list_quad[2])
+        # if(list_quad[3][0] == "T"):
+        reg = get_reg(list_quad[3])
+        if(list_quad[0] == "+"):
+            output_list.append("add "+reg+","+variable1+","+variable2)
+        elif(list_quad[0] == "-"):
+            output_list.append("sub "+reg+","+variable1+","+variable2)
+        elif(list_quad[0] == "*"):
+            output_list.append("mul "+reg+","+variable1+","+variable2)
+        temp_res[list_quad[3]] = reg
+
+    if(list_quad[0] == "/"):
+        flag_div = 1
+
+    
 
 print(output_list)
