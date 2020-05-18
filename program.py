@@ -35,6 +35,7 @@ for row in rows:
         if(list_quad[1].isdigit()):
             reg = get_a_free_register()
             output_list.append(["mov "+reg+","+str(hex(int(list_quad[1])))])
+        
 
 
 print(output_list)
