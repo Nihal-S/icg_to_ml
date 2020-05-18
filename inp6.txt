@@ -1,0 +1,5 @@
+= 2 NULL a
+Label NULL NULL L1
++ a 4 T0
+goto NULL NULL L1
+= T0 NULL b
